@@ -80,6 +80,7 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
+      IMAGE_NAME2: nilesh-0203/devsecops-demo
     outputs:
       image_tag: ${{ steps.set_output.outputs.image_tag }}
     steps:
@@ -109,7 +110,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=long
-            
+            type=ref,event=branch
+            latest
       
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -119,16 +121,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           load: true
-      - name: Debug tags
-        run: |
-          echo "Tags:"
-          echo "${{ steps.meta.outputs.tags }}"
-
-
+      
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):sha-${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME2 }}:sha-${{ github.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
